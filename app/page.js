@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { weddingFunctions } from "./data/functions";
 
-function Countdown({ dateTime }) {
-  const calculateTime = () => {
-    const difference = new Date(dateTime).getTime() - Date.now();
+function Countdown({ targetDate }) {
+  const calculateTimeLeft = () => {
+    const difference =
+      new Date(targetDate).getTime() - new Date().getTime();
 
     if (difference <= 0) {
       return {
@@ -24,33 +25,33 @@ function Countdown({ dateTime }) {
     };
   };
 
-  const [timeLeft, setTimeLeft] = useState(calculateTime);
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(calculateTime());
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [dateTime]);
+  }, [targetDate]);
 
   return (
-    <div className="mt-5 grid grid-cols-4 gap-2">
+    <div className="mt-4 grid grid-cols-4 gap-2">
       {[
-        ["Days", timeLeft.days],
-        ["Hours", timeLeft.hours],
-        ["Minutes", timeLeft.minutes],
-        ["Seconds", timeLeft.seconds],
+        ["DAYS", timeLeft.days],
+        ["HOURS", timeLeft.hours],
+        ["MIN", timeLeft.minutes],
+        ["SEC", timeLeft.seconds],
       ].map(([label, value]) => (
         <div
           key={label}
-          className="rounded-lg border border-[#b89a5a]/40 bg-[#f8f1e7]/70 px-2 py-3 text-center"
+          className="rounded-lg border border-[#d7c08a] bg-white/70 px-1 py-2"
         >
-          <div className="font-serif text-xl">
+          <div className="font-serif text-lg font-semibold text-[#6b2431]">
             {String(value).padStart(2, "0")}
           </div>
 
-          <div className="mt-1 text-[8px] uppercase tracking-[0.12em] text-[#8a6870]">
+          <div className="text-[8px] tracking-[0.12em] text-[#876d45]">
             {label}
           </div>
         </div>
@@ -59,225 +60,257 @@ function Countdown({ dateTime }) {
   );
 }
 
-function FunctionDetails({ event, onBack }) {
+function FunctionDetails({ item, setScreen }) {
   return (
-    <main className="min-h-screen bg-[#f8f1e7] text-[#5b1f2a]">
-      <section className="min-h-screen px-6 py-12">
-        <div className="mx-auto max-w-md text-center">
+    <div className="min-h-screen bg-[#f8f1e7] px-4 py-6 text-[#5b1f2a]">
+      <div className="mx-auto max-w-md">
+        <button
+          onClick={() => setScreen("functions")}
+          className="mb-5 text-xs tracking-[0.18em] text-[#8a6b3d]"
+        >
+          ← BACK
+        </button>
 
-          <p className="text-xs uppercase tracking-[0.35em] text-[#9a7b3f]">
-            SHAILEY & DEEP
+        <div className="rounded-2xl border border-[#c9a85d] bg-[#fffaf3] p-5 shadow-sm">
+          <p className="text-center text-xs tracking-[0.2em] text-[#8a6b3d]">
+            WEDDING CELEBRATION
           </p>
 
-          <div className="mx-auto my-6 h-px w-20 bg-[#b89a5a]" />
+          <h2 className="mt-2 text-center font-serif text-3xl">
+            {item.name}
+          </h2>
 
-          <p className="text-xs uppercase tracking-[0.25em] text-[#9a7b3f]">
-            Wedding Celebration
-          </p>
+          <div className="mt-5">
+            <p className="text-sm font-semibold">DATE</p>
+            <p className="mt-1 text-sm">{item.date}</p>
 
-          <h1 className="mt-4 font-serif text-5xl">
-            {event.name}
-          </h1>
+            <p className="mt-4 text-sm font-semibold">TIME</p>
+            <p className="mt-1 text-sm">{item.time}</p>
 
-          <p className="mt-5 font-serif text-lg italic text-[#7d4a54]">
-            We would love to celebrate this special moment with you
-          </p>
+            <p className="mt-4 text-sm font-semibold">VENUE</p>
+            <p className="mt-1 text-sm">{item.venue}</p>
 
-          <div className="mt-9">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#9a7b3f]">
-              Countdown
+            <p className="mt-2 text-xs leading-5 text-[#765c4c]">
+              {item.address}
             </p>
-
-            <Countdown dateTime={event.dateTime} />
           </div>
 
-          <div className="mt-8 rounded-2xl border border-[#b89a5a]/60 bg-white/50 p-7 text-left shadow-sm">
+          <Countdown targetDate={item.dateTime} />
 
-            <div className="border-b border-[#b89a5a]/30 pb-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#9a7b3f]">
-                Date
-              </p>
-
-              <p className="mt-2 font-serif text-xl">
-                {event.date}
-              </p>
-            </div>
-
-            <div className="border-b border-[#b89a5a]/30 py-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#9a7b3f]">
-                Time
-              </p>
-
-              <p className="mt-2 font-serif text-xl">
-                {event.time}
-              </p>
-            </div>
-
-            <div className="pt-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#9a7b3f]">
-                Venue
-              </p>
-
-              <p className="mt-2 font-serif text-xl">
-                {event.venue}
-              </p>
-
-              <p className="mt-2 text-sm leading-6 text-[#7d4a54]">
-                {event.address}
-              </p>
-            </div>
-
-          </div>
-
-          <div className="mt-7 flex flex-col gap-3">
-
+          <div className="mt-5 grid grid-cols-2 gap-3">
             <a
-              href={event.mapsUrl}
+              href={item.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-full border border-[#9a7b3f] bg-[#6b2431] px-8 py-4 text-sm tracking-[0.15em] text-white shadow-lg transition hover:bg-[#571c27]"
+              className="rounded-full border border-[#b89452] bg-[#6b2431] px-3 py-3 text-center text-[10px] font-semibold tracking-[0.12em] text-white"
             >
               VIEW VENUE
             </a>
 
             <button
-              onClick={() => downloadCalendar(event)}
-              className="rounded-full border border-[#9a7b3f] bg-transparent px-8 py-4 text-sm tracking-[0.15em] text-[#6b2431]"
+              onClick={() => downloadCalendar(item)}
+              className="rounded-full border border-[#b89452] bg-[#fffaf3] px-3 py-3 text-[10px] font-semibold tracking-[0.12em] text-[#6b2431]"
             >
               ADD TO CALENDAR
             </button>
-
-            <button
-              onClick={onBack}
-              className="mt-2 text-sm text-[#9a7b3f] underline underline-offset-4"
-            >
-              ← BACK TO CELEBRATIONS
-            </button>
-
           </div>
-
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
 
-function downloadCalendar(event) {
-  const start = new Date(event.dateTime);
-
+function downloadCalendar(item) {
+  const start = new Date(item.dateTime);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
-  const formatDate = (date) =>
-    date
+  const formatDate = (date) => {
+    return date
       .toISOString()
       .replace(/[-:]/g, "")
-      .replace(".000Z", "Z");
+      .replace(/\.\d{3}Z$/, "Z");
+  };
 
-  const calendarText = `BEGIN:VCALENDAR
+  const calendar = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Shailey and Deep//Wedding//EN
+PRODID:-//Shailey Deep Kankotri//EN
 BEGIN:VEVENT
-UID:${event.id}@shaileyanddeep
+UID:${item.id}@shaileydeepkankotri
 DTSTAMP:${formatDate(new Date())}
 DTSTART:${formatDate(start)}
 DTEND:${formatDate(end)}
-SUMMARY:${event.name} - SHAILEY & DEEP
-LOCATION:${event.venue}, ${event.address}
+SUMMARY:${item.name} - SHAILEY & DEEP
+LOCATION:${item.venue}, ${item.address}
 DESCRIPTION:Wedding celebration of SHAILEY & DEEP
 END:VEVENT
 END:VCALENDAR`;
 
-  const blob = new Blob([calendarText], {
+  const blob = new Blob([calendar], {
     type: "text/calendar;charset=utf-8",
   });
 
   const url = URL.createObjectURL(blob);
-
   const link = document.createElement("a");
-  link.href = url;
-  link.download = `${event.id}.ics`;
 
-  document.body.appendChild(link);
+  link.href = url;
+  link.download = `${item.id}-shailey-deep.ics`;
   link.click();
-  document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
 }
 
 export default function Home() {
   const [screen, setScreen] = useState("opening");
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedFunction, setSelectedFunction] = useState(null);
 
-  if (selectedEvent) {
+  if (screen === "opening") {
     return (
-      <FunctionDetails
-        event={selectedEvent}
-        onBack={() => setSelectedEvent(null)}
-      />
-    );
-  }
+      <main className="h-[100dvh] overflow-hidden bg-[#f8f1e7] text-[#5b1f2a]">
+        <section className="relative h-[100dvh] overflow-hidden px-3 py-3 sm:px-6 sm:py-5">
 
-  if (screen === "functions") {
-    return (
-      <main className="min-h-screen bg-[#f8f1e7] text-[#5b1f2a]">
-        <section className="px-6 py-12">
-          <div className="mx-auto max-w-md text-center">
+          {/* Outer decorative borders */}
+          <div className="pointer-events-none absolute inset-2 rounded-[24px] border border-[#c9a85d]" />
+          <div className="pointer-events-none absolute inset-4 rounded-[20px] border border-[#dfca9a]" />
 
-            <p className="text-xs uppercase tracking-[0.35em] text-[#9a7b3f]">
-              SHAILEY & DEEP
-            </p>
+          {/* Decorative flowers */}
+          <div className="pointer-events-none absolute -left-7 top-8 text-5xl opacity-50">
+            🌸
+          </div>
 
-            <h1 className="mt-5 font-serif text-4xl">
-              Wedding Celebrations
-            </h1>
+          <div className="pointer-events-none absolute -right-7 top-16 text-5xl opacity-50">
+            🌸
+          </div>
 
-            <div className="mx-auto my-6 h-px w-20 bg-[#b89a5a]" />
+          <div className="pointer-events-none absolute -bottom-5 left-3 text-4xl opacity-40">
+            🌿
+          </div>
 
-            <p className="font-serif text-lg italic text-[#7d4a54]">
-              Join us as we celebrate our special moments
-            </p>
+          <div className="pointer-events-none absolute -bottom-4 right-3 text-4xl opacity-40">
+            🌿
+          </div>
 
-            <div className="mt-9 space-y-5">
+          {/* Invitation content */}
+          <div className="relative z-10 mx-auto flex h-full w-full max-w-lg flex-col justify-center text-center">
 
-              {weddingFunctions.map((event) => (
-                <button
-                  key={event.id}
-                  onClick={() => setSelectedEvent(event)}
-                  className="w-full rounded-2xl border border-[#b89a5a]/60 bg-white/50 p-6 text-left shadow-sm transition hover:bg-white/70"
-                >
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#9a7b3f]">
-                    Celebration
-                  </p>
+            {/* Gujarati blessings */}
+            <div className="mb-3 grid grid-cols-3 items-center gap-1 text-[#6b2431]">
+              <div>
+                <p className="font-serif text-[13px] leading-5">
+                  શ્રી ગણેશાય
+                </p>
+                <p className="font-serif text-[13px] leading-5">
+                  નમઃ
+                </p>
+              </div>
 
-                  <h2 className="mt-2 font-serif text-2xl">
-                    {event.name}
-                  </h2>
+              <div>
+                <p className="font-serif text-[13px] leading-5">
+                  શ્રી મહાવીરાય
+                </p>
+                <p className="font-serif text-[13px] leading-5">
+                  નમઃ
+                </p>
+              </div>
 
-                  <p className="mt-2 text-sm text-[#7d4a54]">
-                    {event.date} · {event.time}
-                  </p>
-
-                  <p className="mt-1 text-sm text-[#7d4a54]">
-                    {event.venue}
-                  </p>
-
-                  <Countdown dateTime={event.dateTime} />
-
-                  <p className="mt-4 text-xs tracking-[0.12em] text-[#9a7b3f]">
-                    TAP TO VIEW DETAILS →
-                  </p>
-                </button>
-              ))}
-
+              <div>
+                <p className="font-serif text-[13px] leading-5">
+                  શ્રી અંબે માતાય
+                </p>
+                <p className="font-serif text-[13px] leading-5">
+                  નમઃ
+                </p>
+              </div>
             </div>
 
-            <button
-              onClick={() => setScreen("home")}
-              className="mt-8 text-sm text-[#9a7b3f] underline underline-offset-4"
-            >
-              ← BACK
-            </button>
+            {/* Gold divider */}
+            <div className="mx-auto mb-3 h-px w-24 bg-[#c9a85d]" />
 
+            {/* Together */}
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a6b3d]">
+              Together with their families
+            </p>
+
+            {/* SHAILEY */}
+            <div className="mt-3">
+              <h1 className="font-serif text-[42px] leading-none tracking-[0.08em] text-[#6b2431]">
+                SHAILEY
+              </h1>
+
+              <p className="mt-1 text-[9px] uppercase tracking-[0.18em] text-[#876d45]">
+                Daughter of
+              </p>
+
+              <p className="mt-1 text-[12px] leading-5">
+                Preeti Deven Mehta
+              </p>
+
+              <p className="text-[11px] leading-4">
+                &
+              </p>
+
+              <p className="text-[12px] leading-5">
+                Deven Rohitbhai Mehta
+              </p>
+
+              <p className="text-[9px] text-[#876d45]">
+                Rajkot
+              </p>
+            </div>
+
+            {/* Couple ampersand */}
+            <p className="my-2 font-serif text-2xl leading-none text-[#b89452]">
+              &
+            </p>
+
+            {/* DEEP */}
+            <div>
+              <h1 className="font-serif text-[42px] leading-none tracking-[0.08em] text-[#6b2431]">
+                DEEP
+              </h1>
+
+              <p className="mt-1 text-[9px] uppercase tracking-[0.18em] text-[#876d45]">
+                Son of
+              </p>
+
+              <p className="mt-1 text-[12px] leading-5">
+                Puja Nayan Pithwa
+              </p>
+
+              <p className="text-[11px] leading-4">
+                &
+              </p>
+
+              <p className="text-[12px] leading-5">
+                Nayan Kantibhai Pithwa
+              </p>
+
+              <p className="text-[9px] text-[#876d45]">
+                Rajkot
+              </p>
+            </div>
+
+            {/* Closing */}
+            <div className="mt-3">
+              <p className="font-serif text-[13px] italic leading-5">
+                request the pleasure of your presence
+              </p>
+
+              <p className="mt-1 text-[9px] tracking-[0.12em]">
+                at their wedding celebrations
+              </p>
+
+              <p className="mt-2 font-serif text-[13px] text-[#876d45]">
+                25 — 29 November 2026
+              </p>
+
+              {/* Open invitation */}
+              <button
+                onClick={() => setScreen("home")}
+                className="mt-3 rounded-full border border-[#b89452] bg-[#6b2431] px-7 py-3 text-[11px] font-semibold tracking-[0.2em] text-white shadow-md"
+              >
+                OPEN INVITATION →
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -286,110 +319,112 @@ export default function Home() {
 
   if (screen === "home") {
     return (
-      <main className="min-h-screen bg-[#f8f1e7] text-[#5b1f2a]">
-        <section className="relative min-h-screen overflow-hidden px-6 py-12">
+      <main className="min-h-screen bg-[#f8f1e7] px-4 py-6 text-[#5b1f2a]">
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-xs tracking-[0.25em] text-[#8a6b3d]">
+            WELCOME
+          </p>
 
-          <div className="absolute left-0 top-0 h-44 w-44 rounded-br-full border-b border-r border-[#b89a5a]/50" />
+          <h1 className="mt-3 font-serif text-4xl tracking-[0.08em]">
+            SHAILEY & DEEP
+          </h1>
 
-          <div className="absolute bottom-0 right-0 h-44 w-44 rounded-tl-full border-l border-t border-[#b89a5a]/50" />
+          <div className="mx-auto my-5 h-px w-24 bg-[#c9a85d]" />
 
-          <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center text-center">
+          <p className="font-serif text-lg">
+            are getting married
+          </p>
 
-            <p className="text-xs uppercase tracking-[0.35em] text-[#9a7b3f]">
-              Welcome
-            </p>
+          <p className="mt-2 text-sm text-[#765c4c]">
+            25 — 29 November 2026
+          </p>
 
-            <div className="my-6 h-px w-20 bg-[#b89a5a]" />
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#765c4c]">
+            Five beautiful days filled with family, traditions, laughter and
+            celebration.
+          </p>
 
-            <h1 className="font-serif text-5xl tracking-wide">
-              SHAILEY
-            </h1>
-
-            <p className="my-2 text-2xl text-[#b89a5a]">
-              &
-            </p>
-
-            <h1 className="font-serif text-5xl tracking-wide">
-              DEEP
-            </h1>
-
-            <p className="mt-7 font-serif text-xl italic">
-              are getting married
-            </p>
-
-            <p className="mt-3 text-sm uppercase tracking-[0.25em] text-[#7d4a54]">
-              25 — 29 November 2026
-            </p>
-
-            <p className="mt-5 max-w-sm text-sm leading-6 text-[#7d4a54]">
-              Five beautiful days of love, family,
-              music and celebration.
+          <div className="mt-7 rounded-2xl border border-[#d7c08a] bg-[#fffaf3] p-5">
+            <p className="text-xs tracking-[0.18em] text-[#8a6b3d]">
+              OUR CELEBRATIONS
             </p>
 
             <button
               onClick={() => setScreen("functions")}
-              className="mt-10 rounded-full border border-[#9a7b3f] bg-[#6b2431] px-8 py-4 text-sm tracking-[0.18em] text-white shadow-lg transition hover:bg-[#571c27]"
+              className="mt-4 w-full rounded-full bg-[#6b2431] px-5 py-3 text-xs font-semibold tracking-[0.16em] text-white"
             >
               VIEW CELEBRATIONS
             </button>
-
           </div>
-        </section>
+        </div>
       </main>
     );
   }
 
-  return (
-    <main className="min-h-screen bg-[#f8f1e7] text-[#5b1f2a]">
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
-
-        <div className="absolute left-0 top-0 h-40 w-40 rounded-br-full border-b border-r border-[#b89a5a]/50" />
-
-        <div className="absolute bottom-0 right-0 h-40 w-40 rounded-tl-full border-l border-t border-[#b89a5a]/50" />
-
-        <div className="relative z-10 w-full max-w-md text-center">
-
-          <p className="mb-8 text-xs uppercase tracking-[0.35em] text-[#9a7b3f]">
-            Together with their families
-          </p>
-
-          <div className="mx-auto mb-8 h-px w-24 bg-[#b89a5a]" />
-
-          <p className="mb-5 text-sm tracking-[0.3em]">
-            With joy in their hearts
-          </p>
-
-          <h1 className="font-serif text-5xl tracking-wide leading-tight">
-            SHAILEY
-          </h1>
-
-          <p className="my-3 text-2xl text-[#b89a5a]">
-            &
-          </p>
-
-          <h1 className="font-serif text-5xl tracking-wide leading-tight">
-            DEEP
-          </h1>
-
-          <div className="mx-auto my-9 h-px w-24 bg-[#b89a5a]" />
-
-          <p className="font-serif text-xl italic">
-            request the pleasure of your presence
-          </p>
-
-          <p className="mt-3 text-sm uppercase tracking-[0.2em] text-[#7d4a54]">
-            at their wedding celebrations
-          </p>
-
+  if (screen === "functions") {
+    return (
+      <main className="min-h-screen bg-[#f8f1e7] px-4 py-6 text-[#5b1f2a]">
+        <div className="mx-auto max-w-md">
           <button
             onClick={() => setScreen("home")}
-            className="mt-12 rounded-full border border-[#9a7b3f] bg-[#6b2431] px-9 py-4 text-sm font-medium tracking-[0.18em] text-white shadow-lg transition hover:bg-[#571c27]"
+            className="mb-5 text-xs tracking-[0.18em] text-[#8a6b3d]"
           >
-            OPEN INVITATION
+            ← BACK
           </button>
 
+          <div className="text-center">
+            <p className="text-xs tracking-[0.2em] text-[#8a6b3d]">
+              WEDDING FUNCTIONS
+            </p>
+
+            <h1 className="mt-2 font-serif text-3xl">
+              Our Celebrations
+            </h1>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {weddingFunctions.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setSelectedFunction(item);
+                  setScreen("details");
+                }}
+                className="w-full rounded-2xl border border-[#d7c08a] bg-[#fffaf3] p-4 text-left shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-serif text-xl">
+                      {item.name}
+                    </h2>
+
+                    <p className="mt-1 text-xs text-[#765c4c]">
+                      {item.date} • {item.time}
+                    </p>
+                  </div>
+
+                  <span className="text-lg text-[#b89452]">
+                    →
+                  </span>
+                </div>
+
+                <Countdown targetDate={item.dateTime} />
+              </button>
+            ))}
+          </div>
         </div>
-      </section>
-    </main>
-  );
+      </main>
+    );
+  }
+
+  if (screen === "details" && selectedFunction) {
+    return (
+      <FunctionDetails
+        item={selectedFunction}
+        setScreen={setScreen}
+      />
+    );
+  }
+
+  return null;
 }
