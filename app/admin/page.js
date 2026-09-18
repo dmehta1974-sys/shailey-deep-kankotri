@@ -145,10 +145,16 @@ export default function AdminPage() {
     setCreating(false);
 
     if (error) {
-      console.error(error);
-      setMessage("Could not create invitation. Please try again.");
-      return;
-    }
+  console.error("SUPABASE INVITATION ERROR:", error);
+
+  setMessage(
+    `Could not create invitation: ${
+      error.message || error.details || error.hint || "Unknown error"
+    }`
+  );
+
+  return;
+}
 
     const link = `${window.location.origin}/invite/${invitationId}`;
 

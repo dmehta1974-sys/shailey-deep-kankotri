@@ -51,6 +51,7 @@ function Countdown({ dateTime }) {
           <div className="text-xl font-semibold text-[#6b1f32]">
             {String(value).padStart(2, "0")}
           </div>
+
           <div className="text-[10px] uppercase tracking-wider text-gray-500">
             {label}
           </div>
@@ -62,7 +63,6 @@ function Countdown({ dateTime }) {
 
 function createCalendarFile(event) {
   const start = new Date(event.dateTime);
-
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
   const formatDate = (date) =>
@@ -94,6 +94,7 @@ END:VCALENDAR`;
 
   link.href = url;
   link.download = `${event.id}.ics`;
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -194,7 +195,7 @@ export default function GuestInvitation() {
     if (navigator.share) {
       navigator.share({
         title: "SHAILEY & DEEP",
-        text: `You are invited to the wedding of SHAILEY & DEEP.`,
+        text: "You are invited to the wedding of SHAILEY & DEEP.",
         url,
       });
     } else {
@@ -207,10 +208,13 @@ export default function GuestInvitation() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f1e7] px-6">
         <div className="text-center">
-          <div className="text-3xl font-serif text-[#6b1f32]">
+          <div className="font-serif text-3xl text-[#6b1f32]">
             SHAILEY & DEEP
           </div>
-          <p className="mt-3 text-sm text-gray-500">Loading invitation...</p>
+
+          <p className="mt-3 text-sm text-gray-500">
+            Loading invitation...
+          </p>
         </div>
       </main>
     );
@@ -220,9 +224,10 @@ export default function GuestInvitation() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f1e7] px-6">
         <div className="rounded-2xl border border-[#c9a45c]/50 bg-white p-8 text-center shadow-lg">
-          <div className="text-3xl font-serif text-[#6b1f32]">
+          <div className="font-serif text-3xl text-[#6b1f32]">
             SHAILEY & DEEP
           </div>
+
           <p className="mt-4 text-gray-600">
             {error || "Invitation not found."}
           </p>
@@ -234,53 +239,184 @@ export default function GuestInvitation() {
   return (
     <main className="min-h-screen bg-[#f8f1e7] text-[#4b2630]">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[#fbf7f0] shadow-2xl">
+
         {/* OPENING */}
         {screen === "opening" && (
-          <section className="flex min-h-screen flex-col items-center justify-center px-7 py-12 text-center">
-            <div className="mb-8 text-5xl">🌸</div>
+          <section className="relative h-[100dvh] overflow-hidden px-3 py-3">
 
-            <p className="text-xs uppercase tracking-[0.35em] text-[#9b7440]">
-              You are cordially invited
-            </p>
+            <div className="pointer-events-none absolute inset-2 rounded-[24px] border border-[#c9a85d]" />
 
-            <div className="my-7 h-px w-32 bg-[#c9a45c]" />
+            <div className="pointer-events-none absolute inset-4 rounded-[20px] border border-[#dfca9a]" />
 
-            <p className="text-lg text-gray-600">
-              Dear{" "}
-              <span className="font-semibold text-[#6b1f32]">
-                {invitation.guest_name}
-              </span>
-            </p>
-
-            <h1 className="mt-6 font-serif text-5xl leading-tight text-[#6b1f32]">
-              SHAILEY
-              <span className="block text-2xl text-[#b18a4a]">&</span>
-              DEEP
-            </h1>
-
-            <p className="mt-7 max-w-xs text-sm leading-6 text-gray-600">
-              With the blessings of our families, we invite you to celebrate
-              our wedding celebrations with us.
-            </p>
-
-            <div className="mt-8 rounded-full border border-[#c9a45c]/50 bg-white px-6 py-3 text-sm text-[#6b1f32]">
-              {invitation.guest_count}{" "}
-              {Number(invitation.guest_count) === 1 ? "Guest" : "Guests"}
+            <div className="pointer-events-none absolute -left-7 top-10 text-5xl opacity-50">
+              🌸
             </div>
 
-            <button
-              onClick={() => setScreen("home")}
-              className="mt-10 rounded-full bg-[#6b1f32] px-9 py-3 text-sm font-medium text-white shadow-lg transition hover:bg-[#551728]"
-            >
-              Open Invitation
-            </button>
+            <div className="pointer-events-none absolute -right-7 top-16 text-5xl opacity-50">
+              🌸
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-5 left-3 text-4xl opacity-40">
+              🌿
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-4 right-3 text-4xl opacity-40">
+              🌿
+            </div>
+
+            <div className="relative z-10 mx-auto flex h-full w-full max-w-lg flex-col justify-center text-center">
+
+              {/* Gujarati blessings */}
+              <div className="mb-2 grid grid-cols-3 items-center gap-1 text-[#6b2431]">
+
+                <div>
+                  <p className="font-serif text-[12px] leading-4">
+                    શ્રી ગણેશાય
+                  </p>
+
+                  <p className="font-serif text-[12px] leading-4">
+                    નમઃ
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-serif text-[12px] leading-4">
+                    શ્રી મહાવીરાય
+                  </p>
+
+                  <p className="font-serif text-[12px] leading-4">
+                    નમઃ
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-serif text-[12px] leading-4">
+                    શ્રી અંબે માતાય
+                  </p>
+
+                  <p className="font-serif text-[12px] leading-4">
+                    નમઃ
+                  </p>
+                </div>
+
+              </div>
+
+              <div className="mx-auto mb-2 h-px w-24 bg-[#c9a85d]" />
+
+              <p className="text-[9px] uppercase tracking-[0.28em] text-[#8a6b3d]">
+                You are cordially invited
+              </p>
+
+              <p className="mt-2 text-[14px] text-[#5b1f2a]">
+                Dear{" "}
+                <span className="font-semibold text-[#6b2431]">
+                  {invitation.guest_name}
+                </span>
+              </p>
+
+              {/* SHAILEY */}
+              <div className="mt-2">
+
+                <h1 className="font-serif text-[40px] leading-none tracking-[0.08em] text-[#6b2431]">
+                  SHAILEY
+                </h1>
+
+                <p className="mt-1 text-[8px] uppercase tracking-[0.18em] text-[#876d45]">
+                  Daughter of
+                </p>
+
+                <p className="mt-1 text-[11px] leading-4">
+                  Preeti Deven Mehta
+                </p>
+
+                <p className="text-[10px] leading-3">
+                  &
+                </p>
+
+                <p className="text-[11px] leading-4">
+                  Deven Rohitbhai Mehta
+                </p>
+
+                <p className="text-[8px] text-[#876d45]">
+                  Rajkot
+                </p>
+
+              </div>
+
+              <p className="my-1 font-serif text-xl leading-none text-[#b89452]">
+                &
+              </p>
+
+              {/* DEEP */}
+              <div>
+
+                <h1 className="font-serif text-[40px] leading-none tracking-[0.08em] text-[#6b2431]">
+                  DEEP
+                </h1>
+
+                <p className="mt-1 text-[8px] uppercase tracking-[0.18em] text-[#876d45]">
+                  Son of
+                </p>
+
+                <p className="mt-1 text-[11px] leading-4">
+                  Puja Nayan Pithwa
+                </p>
+
+                <p className="text-[10px] leading-3">
+                  &
+                </p>
+
+                <p className="text-[11px] leading-4">
+                  Nayan Kantibhai Pithwa
+                </p>
+
+                <p className="text-[8px] text-[#876d45]">
+                  Rajkot
+                </p>
+
+              </div>
+
+              {/* Closing */}
+              <div className="mt-2">
+
+                <p className="font-serif text-[12px] italic leading-4">
+                  request the pleasure of your presence
+                </p>
+
+                <p className="mt-1 text-[8px] tracking-[0.12em]">
+                  at their wedding celebrations
+                </p>
+
+                <p className="mt-1 font-serif text-[12px] text-[#876d45]">
+                  25 — 29 November 2026
+                </p>
+
+                <p className="mt-1 text-[9px] text-[#876d45]">
+                  {invitation.guest_count}{" "}
+                  {Number(invitation.guest_count) === 1
+                    ? "Guest"
+                    : "Guests"}
+                </p>
+
+                <button
+                  onClick={() => setScreen("home")}
+                  className="mt-2 rounded-full border border-[#b89452] bg-[#6b2431] px-7 py-3 text-[10px] font-semibold tracking-[0.2em] text-white shadow-md"
+                >
+                  OPEN INVITATION →
+                </button>
+
+              </div>
+
+            </div>
           </section>
         )}
 
         {/* HOME */}
         {screen === "home" && (
           <section className="min-h-screen px-5 py-8">
+
             <div className="text-center">
+
               <div className="text-3xl">🌸</div>
 
               <p className="mt-3 text-xs uppercase tracking-[0.3em] text-[#9b7440]">
@@ -295,28 +431,43 @@ export default function GuestInvitation() {
                 Dear {invitation.guest_name}, we would be delighted to have
                 you celebrate with us.
               </p>
+
             </div>
 
             <div className="mt-8 rounded-3xl border border-[#c9a45c]/40 bg-white p-5 shadow-sm">
+
               <p className="text-center text-xs uppercase tracking-[0.25em] text-[#9b7440]">
                 Your Invitation
               </p>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
+
                 <div className="rounded-2xl bg-[#f8f1e7] p-4 text-center">
+
                   <div className="text-2xl font-semibold text-[#6b1f32]">
                     {invitation.guest_count}
                   </div>
-                  <div className="mt-1 text-xs text-gray-500">Guests</div>
+
+                  <div className="mt-1 text-xs text-gray-500">
+                    Guests
+                  </div>
+
                 </div>
 
                 <div className="rounded-2xl bg-[#f8f1e7] p-4 text-center">
+
                   <div className="text-2xl font-semibold text-[#6b1f32]">
                     {guestFunctions.length}
                   </div>
-                  <div className="mt-1 text-xs text-gray-500">Functions</div>
+
+                  <div className="mt-1 text-xs text-gray-500">
+                    Functions
+                  </div>
+
                 </div>
+
               </div>
+
             </div>
 
             <button
@@ -339,12 +490,14 @@ export default function GuestInvitation() {
             >
               Share Invitation
             </button>
+
           </section>
         )}
 
         {/* FUNCTIONS */}
         {screen === "functions" && (
           <section className="min-h-screen px-5 py-8">
+
             <button
               onClick={() => setScreen("home")}
               className="mb-6 text-sm text-[#8a6636]"
@@ -353,6 +506,7 @@ export default function GuestInvitation() {
             </button>
 
             <div className="text-center">
+
               <p className="text-xs uppercase tracking-[0.3em] text-[#9b7440]">
                 Your Celebrations
               </p>
@@ -360,9 +514,11 @@ export default function GuestInvitation() {
               <h2 className="mt-3 font-serif text-4xl text-[#6b1f32]">
                 Wedding Functions
               </h2>
+
             </div>
 
             <div className="mt-8 space-y-4">
+
               {guestFunctions.map((event) => (
                 <button
                   key={event.id}
@@ -370,10 +526,13 @@ export default function GuestInvitation() {
                     setSelectedFunction(event);
                     setScreen("details");
                   }}
-                  className="w-full rounded-3xl border border-[#c9a45c]/40 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                  className="w-full rounded-3xl border border-[#c9a45c]/40 bg-white p-5 text-left shadow-sm"
                 >
+
                   <div className="flex items-start justify-between gap-4">
+
                     <div>
+
                       <h3 className="font-serif text-2xl text-[#6b1f32]">
                         {event.name}
                       </h3>
@@ -382,17 +541,27 @@ export default function GuestInvitation() {
                         {event.date}
                       </p>
 
-                      <p className="text-sm text-gray-600">{event.time}</p>
+                      <p className="text-sm text-gray-600">
+                        {event.time}
+                      </p>
+
                     </div>
 
-                    <div className="text-2xl text-[#c9a45c]">✦</div>
+                    <div className="text-2xl text-[#c9a45c]">
+                      ✦
+                    </div>
+
                   </div>
 
-                  <div className="mt-4 text-xs text-[#8a6636]">
+                  <Countdown dateTime={event.dateTime} />
+
+                  <div className="mt-3 text-xs text-[#8a6636]">
                     View details →
                   </div>
+
                 </button>
               ))}
+
             </div>
 
             <button
@@ -401,12 +570,14 @@ export default function GuestInvitation() {
             >
               RSVP
             </button>
+
           </section>
         )}
 
         {/* FUNCTION DETAILS */}
         {screen === "details" && selectedFunction && (
           <section className="min-h-screen px-5 py-8">
+
             <button
               onClick={() => setScreen("functions")}
               className="mb-6 text-sm text-[#8a6636]"
@@ -415,8 +586,12 @@ export default function GuestInvitation() {
             </button>
 
             <div className="rounded-3xl border border-[#c9a45c]/40 bg-white p-6 shadow-sm">
+
               <div className="text-center">
-                <div className="text-3xl text-[#c9a45c]">✦</div>
+
+                <div className="text-3xl text-[#c9a45c]">
+                  ✦
+                </div>
 
                 <h2 className="mt-3 font-serif text-4xl text-[#6b1f32]">
                   {selectedFunction.name}
@@ -429,11 +604,13 @@ export default function GuestInvitation() {
                 <p className="text-sm text-gray-600">
                   {selectedFunction.time}
                 </p>
+
               </div>
 
               <Countdown dateTime={selectedFunction.dateTime} />
 
               <div className="mt-7 rounded-2xl bg-[#f8f1e7] p-5">
+
                 <p className="text-xs uppercase tracking-[0.2em] text-[#9b7440]">
                   Venue
                 </p>
@@ -454,6 +631,7 @@ export default function GuestInvitation() {
                 >
                   Open Google Maps
                 </a>
+
               </div>
 
               <button
@@ -462,13 +640,16 @@ export default function GuestInvitation() {
               >
                 Add to Calendar
               </button>
+
             </div>
+
           </section>
         )}
 
         {/* RSVP */}
         {screen === "rsvp" && (
           <section className="min-h-screen px-5 py-8">
+
             <button
               onClick={() => setScreen("home")}
               className="mb-6 text-sm text-[#8a6636]"
@@ -477,6 +658,7 @@ export default function GuestInvitation() {
             </button>
 
             <div className="text-center">
+
               <div className="text-3xl">🌸</div>
 
               <p className="mt-3 text-xs uppercase tracking-[0.3em] text-[#9b7440]">
@@ -491,9 +673,11 @@ export default function GuestInvitation() {
                 Please let us know whether you will be joining SHAILEY & DEEP
                 for their wedding celebrations.
               </p>
+
             </div>
 
             <div className="mt-8 rounded-3xl border border-[#c9a45c]/40 bg-white p-6 shadow-sm">
+
               <label className="text-xs uppercase tracking-[0.2em] text-[#9b7440]">
                 Your Name
               </label>
@@ -510,6 +694,7 @@ export default function GuestInvitation() {
               </p>
 
               <div className="mt-3 grid grid-cols-2 gap-3">
+
                 <button
                   onClick={() => setAttending(true)}
                   className={`rounded-xl border px-4 py-3 text-sm font-medium ${
@@ -531,6 +716,7 @@ export default function GuestInvitation() {
                 >
                   Sorry, Can't
                 </button>
+
               </div>
 
               <label className="mt-6 block text-xs uppercase tracking-[0.2em] text-[#9b7440]">
@@ -564,9 +750,12 @@ export default function GuestInvitation() {
                   {rsvpStatus}
                 </p>
               )}
+
             </div>
+
           </section>
         )}
+
       </div>
     </main>
   );
