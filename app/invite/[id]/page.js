@@ -361,7 +361,7 @@ export default function GuestInvitation() {
                 </p>
 
                 <p className="mt-1 px-2 text-[12px] leading-4 text-[#4b2630]">
-                  Smt. Preeti &amp; Deven Rohit Mehta
+                  Smt. Preeti &amp; Deven Rohitbhai Mehta
                 </p>
 
               </div>
