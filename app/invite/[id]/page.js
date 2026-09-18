@@ -240,170 +240,199 @@ export default function GuestInvitation() {
     <main className="min-h-screen bg-[#f8f1e7] text-[#4b2630]">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[#fbf7f0] shadow-2xl">
 
-        {/* OPENING */}
+        {/* =========================================================
+            OPENING INVITATION
+        ========================================================= */}
         {screen === "opening" && (
-          <section className="relative h-[100dvh] overflow-hidden px-3 py-3">
+          <section className="relative min-h-[100dvh] overflow-hidden px-4 py-4">
 
+            {/* Elegant borders */}
             <div className="pointer-events-none absolute inset-2 rounded-[24px] border border-[#c9a85d]" />
 
             <div className="pointer-events-none absolute inset-4 rounded-[20px] border border-[#dfca9a]" />
 
-            <div className="pointer-events-none absolute -left-7 top-10 text-5xl opacity-50">
+            {/* Decorative flowers */}
+            <div className="pointer-events-none absolute -left-7 top-8 text-5xl opacity-40">
               🌸
             </div>
 
-            <div className="pointer-events-none absolute -right-7 top-16 text-5xl opacity-50">
+            <div className="pointer-events-none absolute -right-7 top-8 text-5xl opacity-40">
               🌸
             </div>
 
-            <div className="pointer-events-none absolute -bottom-5 left-3 text-4xl opacity-40">
+            <div className="pointer-events-none absolute -bottom-5 left-3 text-4xl opacity-30">
               🌿
             </div>
 
-            <div className="pointer-events-none absolute -bottom-4 right-3 text-4xl opacity-40">
+            <div className="pointer-events-none absolute -bottom-4 right-3 text-4xl opacity-30">
               🌿
             </div>
 
-            <div className="relative z-10 mx-auto flex h-full w-full max-w-lg flex-col justify-center text-center">
+            <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col justify-center text-center">
 
-              {/* Gujarati blessings */}
-              <div className="mb-2 grid grid-cols-3 items-center gap-1 text-[#6b2431]">
+              {/* =====================================================
+                  GUJARATI BLESSINGS
+              ===================================================== */}
+              <div className="mb-3 grid grid-cols-3 items-start gap-1 text-[#8a6636]">
 
-                <div>
-                  <p className="font-serif text-[12px] leading-4">
+                <div className="flex flex-col items-center">
+                  <div className="mb-1 text-lg text-[#b89452]">
+                    🕉️
+                  </div>
+
+                  <p className="font-serif text-[11px] leading-4">
                     શ્રી ગણેશાય
                   </p>
 
-                  <p className="font-serif text-[12px] leading-4">
+                  <p className="font-serif text-[11px] leading-4">
                     નમઃ
                   </p>
                 </div>
 
-                <div>
-                  <p className="font-serif text-[12px] leading-4">
+                <div className="flex flex-col items-center">
+                  <div className="mb-1 text-lg text-[#b89452]">
+                    🙏
+                  </div>
+
+                  <p className="font-serif text-[11px] leading-4">
                     શ્રી મહાવીરાય
                   </p>
 
-                  <p className="font-serif text-[12px] leading-4">
+                  <p className="font-serif text-[11px] leading-4">
                     નમઃ
                   </p>
                 </div>
 
-                <div>
-                  <p className="font-serif text-[12px] leading-4">
+                <div className="flex flex-col items-center">
+                  <div className="mb-1 text-lg text-[#b89452]">
+                    ॐ
+                  </div>
+
+                  <p className="font-serif text-[11px] leading-4">
                     શ્રી અંબે માતાય
                   </p>
 
-                  <p className="font-serif text-[12px] leading-4">
+                  <p className="font-serif text-[11px] leading-4">
                     નમઃ
                   </p>
                 </div>
 
               </div>
 
-              <div className="mx-auto mb-2 h-px w-24 bg-[#c9a85d]" />
+              {/* Divider */}
+              <div className="mx-auto mb-3 flex items-center justify-center gap-2">
+                <div className="h-px w-10 bg-[#c9a85d]" />
+                <span className="text-sm text-[#b89452]">✦</span>
+                <div className="h-px w-10 bg-[#c9a85d]" />
+              </div>
 
-              <p className="text-[9px] uppercase tracking-[0.28em] text-[#8a6b3d]">
-                You are cordially invited
+              {/* =====================================================
+                  GUEST NAME
+              ===================================================== */}
+              <p className="px-3 font-serif text-[24px] leading-tight text-[#6b2431] sm:text-[27px]">
+                {invitation.guest_name}
               </p>
 
-              <p className="mt-2 text-[14px] text-[#5b1f2a]">
-                Dear{" "}
-                <span className="font-semibold text-[#6b2431]">
-                  {invitation.guest_name}
-                </span>
+              {/* =====================================================
+                  INVITATION LINE
+              ===================================================== */}
+              <p className="mt-2 px-2 font-serif text-[14px] italic leading-5 text-[#4b2630]">
+                We cordially invite you for the wedding of
               </p>
 
-              {/* SHAILEY */}
-              <div className="mt-2">
+              {/* Small divider */}
+              <div className="mx-auto mt-2 flex items-center justify-center gap-2">
+                <div className="h-px w-8 bg-[#c9a85d]" />
+                <span className="text-xs text-[#b89452]">✦</span>
+                <div className="h-px w-8 bg-[#c9a85d]" />
+              </div>
 
-                <h1 className="font-serif text-[40px] leading-none tracking-[0.08em] text-[#6b2431]">
+              {/* =====================================================
+                  SHAILEY
+              ===================================================== */}
+              <div className="mt-3">
+
+                <h1 className="font-serif text-[42px] leading-none tracking-[0.08em] text-[#6b2431]">
                   SHAILEY
                 </h1>
 
-                <p className="mt-1 text-[8px] uppercase tracking-[0.18em] text-[#876d45]">
-                  Daughter of
+                <p className="mt-2 text-[9px] uppercase tracking-[0.22em] text-[#876d45]">
+                  D/O OF
                 </p>
 
-                <p className="mt-1 text-[11px] leading-4">
-                  Preeti Deven Mehta
-                </p>
-
-                <p className="text-[10px] leading-3">
-                  &
-                </p>
-
-                <p className="text-[11px] leading-4">
-                  Deven Rohitbhai Mehta
-                </p>
-
-                <p className="text-[8px] text-[#876d45]">
-                  Rajkot
+                <p className="mt-1 px-2 text-[12px] leading-4 text-[#4b2630]">
+                  Smt. Preeti &amp; Deven Rohit Mehta
                 </p>
 
               </div>
 
-              <p className="my-1 font-serif text-xl leading-none text-[#b89452]">
-                &
+              {/* =====================================================
+                  AMPERSAND
+              ===================================================== */}
+              <p className="my-2 font-serif text-[30px] leading-none text-[#b89452]">
+                &amp;
               </p>
 
-              {/* DEEP */}
+              {/* =====================================================
+                  DEEP
+              ===================================================== */}
               <div>
 
-                <h1 className="font-serif text-[40px] leading-none tracking-[0.08em] text-[#6b2431]">
+                <h1 className="font-serif text-[42px] leading-none tracking-[0.08em] text-[#6b2431]">
                   DEEP
                 </h1>
 
-                <p className="mt-1 text-[8px] uppercase tracking-[0.18em] text-[#876d45]">
-                  Son of
+                <p className="mt-2 text-[9px] uppercase tracking-[0.22em] text-[#876d45]">
+                  S/O OF
                 </p>
 
-                <p className="mt-1 text-[11px] leading-4">
-                  Puja Nayan Pithwa
-                </p>
-
-                <p className="text-[10px] leading-3">
-                  &
-                </p>
-
-                <p className="text-[11px] leading-4">
-                  Nayan Kantibhai Pithwa
-                </p>
-
-                <p className="text-[8px] text-[#876d45]">
-                  Rajkot
+                <p className="mt-1 px-2 text-[12px] leading-4 text-[#4b2630]">
+                  Smt. Puja &amp; Nayan Kantibhai Pithwa
                 </p>
 
               </div>
 
-              {/* Closing */}
-              <div className="mt-2">
+              {/* =====================================================
+                  CLOSING
+              ===================================================== */}
+              <div className="mt-4">
 
-                <p className="font-serif text-[12px] italic leading-4">
+                <p className="font-serif text-[14px] italic leading-5 text-[#6b2431]">
                   request the pleasure of your presence
                 </p>
 
-                <p className="mt-1 text-[8px] tracking-[0.12em]">
+                <p className="mt-1 text-[9px] tracking-[0.13em] text-[#4b2630]">
                   at their wedding celebrations
                 </p>
 
-                <p className="mt-1 font-serif text-[12px] text-[#876d45]">
+                <div className="mx-auto mt-2 flex items-center justify-center gap-2">
+                  <div className="h-px w-8 bg-[#c9a85d]" />
+                  <span className="text-xs text-[#b89452]">✦</span>
+                  <div className="h-px w-8 bg-[#c9a85d]" />
+                </div>
+
+                <p className="mt-2 font-serif text-[13px] text-[#876d45]">
                   25 — 29 November 2026
                 </p>
 
-                <p className="mt-1 text-[9px] text-[#876d45]">
+                <p className="mt-1 text-[10px] text-[#876d45]">
                   {invitation.guest_count}{" "}
                   {Number(invitation.guest_count) === 1
                     ? "Guest"
                     : "Guests"}
                 </p>
 
+                {/* Open Invitation */}
                 <button
                   onClick={() => setScreen("home")}
-                  className="mt-2 rounded-full border border-[#b89452] bg-[#6b2431] px-7 py-3 text-[10px] font-semibold tracking-[0.2em] text-white shadow-md"
+                  className="mt-3 rounded-full border border-[#b89452] bg-[#6b2431] px-8 py-3 text-[10px] font-semibold tracking-[0.2em] text-white shadow-md transition hover:bg-[#7b2939] active:scale-[0.98]"
                 >
                   OPEN INVITATION →
                 </button>
+
+                <p className="mt-3 text-[8px] uppercase tracking-[0.28em] text-[#9b7440]">
+                  With Love &amp; Blessings
+                </p>
 
               </div>
 
@@ -411,7 +440,9 @@ export default function GuestInvitation() {
           </section>
         )}
 
-        {/* HOME */}
+        {/* =========================================================
+            HOME
+        ========================================================= */}
         {screen === "home" && (
           <section className="min-h-screen px-5 py-8">
 
@@ -424,12 +455,12 @@ export default function GuestInvitation() {
               </p>
 
               <h1 className="mt-4 font-serif text-4xl text-[#6b1f32]">
-                SHAILEY & DEEP
+                SHAILEY &amp; DEEP
               </h1>
 
               <p className="mt-3 text-sm text-gray-600">
-                Dear {invitation.guest_name}, we would be delighted to have
-                you celebrate with us.
+                {invitation.guest_name}, we would be delighted to have you
+                celebrate with us.
               </p>
 
             </div>
@@ -494,7 +525,9 @@ export default function GuestInvitation() {
           </section>
         )}
 
-        {/* FUNCTIONS */}
+        {/* =========================================================
+            FUNCTIONS
+        ========================================================= */}
         {screen === "functions" && (
           <section className="min-h-screen px-5 py-8">
 
@@ -574,7 +607,9 @@ export default function GuestInvitation() {
           </section>
         )}
 
-        {/* FUNCTION DETAILS */}
+        {/* =========================================================
+            FUNCTION DETAILS
+        ========================================================= */}
         {screen === "details" && selectedFunction && (
           <section className="min-h-screen px-5 py-8">
 
@@ -646,7 +681,9 @@ export default function GuestInvitation() {
           </section>
         )}
 
-        {/* RSVP */}
+        {/* =========================================================
+            RSVP
+        ========================================================= */}
         {screen === "rsvp" && (
           <section className="min-h-screen px-5 py-8">
 
@@ -670,8 +707,8 @@ export default function GuestInvitation() {
               </h2>
 
               <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-gray-600">
-                Please let us know whether you will be joining SHAILEY & DEEP
-                for their wedding celebrations.
+                Please let us know whether you will be joining SHAILEY &amp;
+                DEEP for their wedding celebrations.
               </p>
 
             </div>
