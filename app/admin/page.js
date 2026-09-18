@@ -1,16 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { weddingFunctions } from "../data/functions";
 import { supabase } from "../supabase";
+
+function cleanWhatsAppNumber(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function displayWhatsAppNumber(value) {
+  const digits = cleanWhatsAppNumber(value);
+
+  if (!digits) return "";
+
+  return `+${digits}`;
+}
 
 export default function AdminPage() {
   const [guestName, setGuestName] = useState("");
   const [guestCount, setGuestCount] = useState(1);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [invitationType, setInvitationType] = useState("full");
   const [selectedFunctions, setSelectedFunctions] = useState([]);
 
   const [createdLink, setCreatedLink] = useState("");
+  const [createdGuestName, setCreatedGuestName] = useState("");
+  const [createdWhatsAppNumber, setCreatedWhatsAppNumber] =
+    useState("");
   const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -27,8 +44,12 @@ export default function AdminPage() {
   const [editingInvitation, setEditingInvitation] = useState(null);
   const [editGuestName, setEditGuestName] = useState("");
   const [editGuestCount, setEditGuestCount] = useState(1);
-  const [editInvitationType, setEditInvitationType] = useState("full");
-  const [editSelectedFunctions, setEditSelectedFunctions] = useState([]);
+  const [editWhatsAppNumber, setEditWhatsAppNumber] =
+    useState("");
+  const [editInvitationType, setEditInvitationType] =
+    useState("full");
+  const [editSelectedFunctions, setEditSelectedFunctions] =
+    useState([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editMessage, setEditMessage] = useState("");
 
@@ -43,7 +64,7 @@ export default function AdminPage() {
       supabase
         .from("invitations")
         .select(
-          "invitation_id, guest_name, guest_count, invitation_type, selected_functions, created_at"
+          "invitation_id, guest_name, guest_count, whatsapp_number, invitation_type, selected_functions, created_at"
         )
         .order("created_at", { ascending: false }),
 
@@ -96,6 +117,8 @@ export default function AdminPage() {
   async function createInvitation() {
     setMessage("");
     setCreatedLink("");
+    setCreatedGuestName("");
+    setCreatedWhatsAppNumber("");
 
     if (!guestName.trim()) {
       setMessage("Please enter a guest or family name.");
@@ -107,12 +130,36 @@ export default function AdminPage() {
       return;
     }
 
-    if (invitationType === "custom" && selectedFunctions.length < 1) {
+    const cleanWhatsApp = cleanWhatsAppNumber(
+      whatsappNumber
+    );
+
+    if (!cleanWhatsApp) {
+      setMessage(
+        "Please enter a WhatsApp number with country code. Example: +919876543210"
+      );
+      return;
+    }
+
+    if (cleanWhatsApp.length < 8) {
+      setMessage(
+        "Please enter a valid international WhatsApp number."
+      );
+      return;
+    }
+
+    if (
+      invitationType === "custom" &&
+      selectedFunctions.length < 1
+    ) {
       setMessage("Please select at least one function.");
       return;
     }
 
-    if (invitationType === "single" && selectedFunctions.length !== 1) {
+    if (
+      invitationType === "single" &&
+      selectedFunctions.length !== 1
+    ) {
       setMessage("Please select exactly one function.");
       return;
     }
@@ -138,6 +185,7 @@ export default function AdminPage() {
       invitation_id: invitationId,
       guest_name: cleanName,
       guest_count: Number(guestCount),
+      whatsapp_number: cleanWhatsApp,
       invitation_type: invitationType,
       selected_functions: finalFunctions,
     });
@@ -145,26 +193,34 @@ export default function AdminPage() {
     setCreating(false);
 
     if (error) {
-  console.error("SUPABASE INVITATION ERROR:", error);
+      console.error("SUPABASE INVITATION ERROR:", error);
 
-  setMessage(
-    `Could not create invitation: ${
-      error.message || error.details || error.hint || "Unknown error"
-    }`
-  );
+      setMessage(
+        `Could not create invitation: ${
+          error.message ||
+          error.details ||
+          error.hint ||
+          "Unknown error"
+        }`
+      );
 
-  return;
-}
+      return;
+    }
 
     const link = `${window.location.origin}/invite/${invitationId}`;
 
     setCreatedLink(link);
+    setCreatedGuestName(cleanName);
+    setCreatedWhatsAppNumber(cleanWhatsApp);
     setMessage("Invitation created successfully!");
 
     setGuestName("");
     setGuestCount(1);
+    setWhatsappNumber("");
     setInvitationType("full");
-    setSelectedFunctions(weddingFunctions.map((item) => item.id));
+    setSelectedFunctions(
+      weddingFunctions.map((item) => item.id)
+    );
 
     await loadAdminData();
   }
@@ -179,17 +235,31 @@ export default function AdminPage() {
     }
   }
 
-  function shareWhatsApp(link, name) {
-    const text = `You are invited to the wedding of SHAILEY & DEEP.\n\nDear ${name}, please open your personalized invitation:\n${link}`;
+  function shareWhatsApp(link, name, phoneNumber) {
+    const cleanNumber = cleanWhatsAppNumber(phoneNumber);
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    // IMPORTANT:
+    // We do NOT add "Dear" automatically.
+    // Whatever is typed in Guest / Family Name is used exactly.
+    const text = `${name}, please open your personalized invitation for the wedding of SHAILEY & DEEP:\n${link}`;
+
+    const whatsappUrl = cleanNumber
+      ? `https://wa.me/${cleanNumber}?text=${encodeURIComponent(
+          text
+        )}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
     window.open(whatsappUrl, "_blank");
   }
 
   function getFunctionNames(functionIds) {
     return (functionIds || [])
-      .map((id) => weddingFunctions.find((item) => item.id === id)?.name)
+      .map(
+        (id) =>
+          weddingFunctions.find(
+            (item) => item.id === id
+          )?.name
+      )
       .filter(Boolean)
       .join(", ");
   }
@@ -216,8 +286,13 @@ export default function AdminPage() {
     setEditingInvitation(invitation);
     setEditGuestName(invitation.guest_name);
     setEditGuestCount(invitation.guest_count);
+    setEditWhatsAppNumber(
+      invitation.whatsapp_number || ""
+    );
     setEditInvitationType(invitation.invitation_type);
-    setEditSelectedFunctions(invitation.selected_functions || []);
+    setEditSelectedFunctions(
+      invitation.selected_functions || []
+    );
     setEditMessage("");
 
     window.scrollTo({
@@ -261,12 +336,33 @@ export default function AdminPage() {
     setEditMessage("");
 
     if (!editGuestName.trim()) {
-      setEditMessage("Please enter a guest or family name.");
+      setEditMessage(
+        "Please enter a guest or family name."
+      );
       return;
     }
 
     if (!editGuestCount || Number(editGuestCount) < 1) {
-      setEditMessage("Guest count must be at least 1.");
+      setEditMessage(
+        "Guest count must be at least 1."
+      );
+      return;
+    }
+
+    const cleanEditWhatsApp =
+      cleanWhatsAppNumber(editWhatsAppNumber);
+
+    if (!cleanEditWhatsApp) {
+      setEditMessage(
+        "Please enter a WhatsApp number with country code. Example: +919876543210"
+      );
+      return;
+    }
+
+    if (cleanEditWhatsApp.length < 8) {
+      setEditMessage(
+        "Please enter a valid international WhatsApp number."
+      );
       return;
     }
 
@@ -274,7 +370,9 @@ export default function AdminPage() {
       editInvitationType === "custom" &&
       editSelectedFunctions.length < 1
     ) {
-      setEditMessage("Please select at least one function.");
+      setEditMessage(
+        "Please select at least one function."
+      );
       return;
     }
 
@@ -282,7 +380,9 @@ export default function AdminPage() {
       editInvitationType === "single" &&
       editSelectedFunctions.length !== 1
     ) {
-      setEditMessage("Please select exactly one function.");
+      setEditMessage(
+        "Please select exactly one function."
+      );
       return;
     }
 
@@ -298,6 +398,7 @@ export default function AdminPage() {
       .update({
         guest_name: editGuestName.trim(),
         guest_count: Number(editGuestCount),
+        whatsapp_number: cleanEditWhatsApp,
         invitation_type: editInvitationType,
         selected_functions: finalFunctions,
       })
@@ -316,7 +417,9 @@ export default function AdminPage() {
       return;
     }
 
-    setEditMessage("Invitation updated successfully!");
+    setEditMessage(
+      "Invitation updated successfully!"
+    );
 
     await loadAdminData();
 
@@ -326,34 +429,159 @@ export default function AdminPage() {
     }, 1000);
   }
 
+  function exportGuestsToExcel() {
+    const rows = invitations.map((invitation) => {
+      const rsvp = getLatestRsvp(
+        invitation.invitation_id
+      );
+
+      return {
+        "Guest / Family": invitation.guest_name,
+        "Guest Count": Number(
+          invitation.guest_count || 0
+        ),
+        "WhatsApp Number": invitation.whatsapp_number
+          ? displayWhatsAppNumber(
+              invitation.whatsapp_number
+            )
+          : "",
+        "Invitation Type": invitation.invitation_type,
+        Functions: getFunctionNames(
+          invitation.selected_functions
+        ),
+        RSVP: rsvp
+          ? rsvp.attending
+            ? "Attending"
+            : "Not Attending"
+          : "No RSVP",
+        "RSVP Guest Name":
+          rsvp?.guest_name || "",
+        "RSVP Message":
+          rsvp?.message || "",
+        "Invitation Link": `${window.location.origin}/invite/${invitation.invitation_id}`,
+        "Created At": invitation.created_at
+          ? new Date(
+              invitation.created_at
+            ).toLocaleString()
+          : "",
+      };
+    });
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(rows);
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Guest List"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      "Shailey-Deep-Guest-List.xlsx"
+    );
+
+    setMessage(
+      "Guest list Excel file downloaded!"
+    );
+  }
+
+  function exportRsvpsToExcel() {
+    const rows = rsvps.map((rsvp) => ({
+      "Guest Name": rsvp.guest_name,
+      "Family / Invitation":
+        getInvitationName(
+          rsvp.invitation_id
+        ),
+      "Invitation ID":
+        rsvp.invitation_id,
+      Attending: rsvp.attending
+        ? "Yes"
+        : "No",
+      Message: rsvp.message || "",
+      "RSVP Date": rsvp.created_at
+        ? new Date(
+            rsvp.created_at
+          ).toLocaleString()
+        : "",
+    }));
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(rows);
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "RSVPs"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      "Shailey-Deep-RSVPs.xlsx"
+    );
+
+    setMessage(
+      "RSVP Excel file downloaded!"
+    );
+  }
+
   const filteredInvitations = useMemo(() => {
-    const search = invitationSearch.trim().toLowerCase();
+    const search =
+      invitationSearch.trim().toLowerCase();
 
     return invitations.filter((invitation) => {
       const matchesSearch =
         !search ||
-        invitation.guest_name.toLowerCase().includes(search) ||
-        invitation.invitation_id.toLowerCase().includes(search);
-
-      const invitationRsvp = getLatestRsvp(
+        invitation.guest_name
+          .toLowerCase()
+          .includes(search) ||
         invitation.invitation_id
-      );
+          .toLowerCase()
+          .includes(search) ||
+        (invitation.whatsapp_number || "")
+          .toLowerCase()
+          .includes(search);
+
+      const invitationRsvp =
+        getLatestRsvp(
+          invitation.invitation_id
+        );
 
       let matchesFilter = true;
 
-      if (invitationFilter === "attending") {
-        matchesFilter = invitationRsvp?.attending === true;
+      if (
+        invitationFilter === "attending"
+      ) {
+        matchesFilter =
+          invitationRsvp?.attending === true;
       }
 
-      if (invitationFilter === "not-attending") {
-        matchesFilter = invitationRsvp?.attending === false;
+      if (
+        invitationFilter ===
+        "not-attending"
+      ) {
+        matchesFilter =
+          invitationRsvp?.attending === false;
       }
 
-      if (invitationFilter === "no-response") {
-        matchesFilter = !invitationRsvp;
+      if (
+        invitationFilter ===
+        "no-response"
+      ) {
+        matchesFilter =
+          !invitationRsvp;
       }
 
-      return matchesSearch && matchesFilter;
+      return (
+        matchesSearch &&
+        matchesFilter
+      );
     });
   }, [
     invitations,
@@ -363,29 +591,44 @@ export default function AdminPage() {
   ]);
 
   const filteredRsvps = useMemo(() => {
-    const search = rsvpSearch.trim().toLowerCase();
+    const search =
+      rsvpSearch.trim().toLowerCase();
 
     return rsvps.filter((rsvp) => {
-      const invitationName = getInvitationName(
-        rsvp.invitation_id
-      );
+      const invitationName =
+        getInvitationName(
+          rsvp.invitation_id
+        );
 
       const matchesSearch =
         !search ||
-        rsvp.guest_name.toLowerCase().includes(search) ||
-        invitationName.toLowerCase().includes(search);
+        rsvp.guest_name
+          .toLowerCase()
+          .includes(search) ||
+        invitationName
+          .toLowerCase()
+          .includes(search);
 
       let matchesFilter = true;
 
-      if (rsvpFilter === "attending") {
-        matchesFilter = rsvp.attending === true;
+      if (
+        rsvpFilter === "attending"
+      ) {
+        matchesFilter =
+          rsvp.attending === true;
       }
 
-      if (rsvpFilter === "not-attending") {
-        matchesFilter = rsvp.attending === false;
+      if (
+        rsvpFilter === "not-attending"
+      ) {
+        matchesFilter =
+          rsvp.attending === false;
       }
 
-      return matchesSearch && matchesFilter;
+      return (
+        matchesSearch &&
+        matchesFilter
+      );
     });
   }, [
     rsvps,
@@ -394,35 +637,51 @@ export default function AdminPage() {
     invitations,
   ]);
 
-  const attendingRsvps = rsvps.filter(
-    (rsvp) => rsvp.attending === true
-  );
+  const attendingRsvps =
+    rsvps.filter(
+      (rsvp) =>
+        rsvp.attending === true
+    );
 
-  const notAttendingCount = rsvps.filter(
-    (rsvp) => rsvp.attending === false
-  ).length;
+  const notAttendingCount =
+    rsvps.filter(
+      (rsvp) =>
+        rsvp.attending === false
+    ).length;
 
-  const attendingInvitations = invitations.filter(
-    (invitation) => {
-      const rsvp = getLatestRsvp(
-        invitation.invitation_id
-      );
+  const attendingInvitations =
+    invitations.filter(
+      (invitation) => {
+        const rsvp =
+          getLatestRsvp(
+            invitation.invitation_id
+          );
 
-      return rsvp?.attending === true;
-    }
-  );
+        return (
+          rsvp?.attending === true
+        );
+      }
+    );
 
-  const confirmedGuests = attendingInvitations.reduce(
-    (total, invitation) =>
-      total + Number(invitation.guest_count || 0),
-    0
-  );
+  const confirmedGuests =
+    attendingInvitations.reduce(
+      (total, invitation) =>
+        total +
+        Number(
+          invitation.guest_count || 0
+        ),
+      0
+    );
 
-  const totalInvitedGuests = invitations.reduce(
-    (total, invitation) =>
-      total + Number(invitation.guest_count || 0),
-    0
-  );
+  const totalInvitedGuests =
+    invitations.reduce(
+      (total, invitation) =>
+        total +
+        Number(
+          invitation.guest_count || 0
+        ),
+      0
+    );
 
   return (
     <main className="min-h-screen bg-[#f8f1e7] px-4 py-8 text-[#4b2630]">
@@ -474,7 +733,7 @@ export default function AdminPage() {
 
             </div>
 
-            <div className="mt-7 grid gap-6 md:grid-cols-2">
+            <div className="mt-7 grid gap-6 md:grid-cols-3">
 
               <div>
                 <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
@@ -484,7 +743,9 @@ export default function AdminPage() {
                 <input
                   value={editGuestName}
                   onChange={(e) =>
-                    setEditGuestName(e.target.value)
+                    setEditGuestName(
+                      e.target.value
+                    )
                   }
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
                 />
@@ -500,13 +761,37 @@ export default function AdminPage() {
                   min="1"
                   value={editGuestCount}
                   onChange={(e) =>
-                    setEditGuestCount(e.target.value)
+                    setEditGuestCount(
+                      e.target.value
+                    )
                   }
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
                 />
 
                 <p className="mt-1 text-xs text-gray-500">
                   This remains the fixed guest count.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
+                  WhatsApp Number
+                </label>
+
+                <input
+                  value={editWhatsAppNumber}
+                  onChange={(e) =>
+                    setEditWhatsAppNumber(
+                      e.target.value
+                    )
+                  }
+                  placeholder="+919876543210"
+                  inputMode="tel"
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
+                />
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Include country code: +91, +1, +44, etc.
                 </p>
               </div>
 
@@ -523,10 +808,13 @@ export default function AdminPage() {
 
                 <button
                   onClick={() =>
-                    handleEditTypeChange("full")
+                    handleEditTypeChange(
+                      "full"
+                    )
                   }
                   className={`rounded-2xl border p-4 text-left ${
-                    editInvitationType === "full"
+                    editInvitationType ===
+                    "full"
                       ? "border-[#6b1f32] bg-[#6b1f32] text-white"
                       : "border-gray-200 bg-white"
                   }`}
@@ -542,10 +830,13 @@ export default function AdminPage() {
 
                 <button
                   onClick={() =>
-                    handleEditTypeChange("custom")
+                    handleEditTypeChange(
+                      "custom"
+                    )
                   }
                   className={`rounded-2xl border p-4 text-left ${
-                    editInvitationType === "custom"
+                    editInvitationType ===
+                    "custom"
                       ? "border-[#6b1f32] bg-[#6b1f32] text-white"
                       : "border-gray-200 bg-white"
                   }`}
@@ -561,10 +852,13 @@ export default function AdminPage() {
 
                 <button
                   onClick={() =>
-                    handleEditTypeChange("single")
+                    handleEditTypeChange(
+                      "single"
+                    )
                   }
                   className={`rounded-2xl border p-4 text-left ${
-                    editInvitationType === "single"
+                    editInvitationType ===
+                    "single"
                       ? "border-[#6b1f32] bg-[#6b1f32] text-white"
                       : "border-gray-200 bg-white"
                   }`}
@@ -582,7 +876,8 @@ export default function AdminPage() {
             </div>
 
             {/* EDIT FUNCTIONS */}
-            {editInvitationType !== "full" && (
+            {editInvitationType !==
+              "full" && (
               <div className="mt-7">
 
                 <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
@@ -591,64 +886,74 @@ export default function AdminPage() {
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
 
-                  {weddingFunctions.map((event) => {
+                  {weddingFunctions.map(
+                    (event) => {
 
-                    const selected =
-                      editSelectedFunctions.includes(
-                        event.id
+                      const selected =
+                        editSelectedFunctions.includes(
+                          event.id
+                        );
+
+                      return (
+                        <button
+                          key={event.id}
+                          onClick={() =>
+                            toggleEditFunction(
+                              event.id
+                            )
+                          }
+                          className={`rounded-2xl border p-4 text-left ${
+                            selected
+                              ? "border-[#6b1f32] bg-[#fff5f5]"
+                              : "border-gray-200 bg-white"
+                          }`}
+                        >
+
+                          <div className="flex items-center gap-3">
+
+                            <div
+                              className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs ${
+                                selected
+                                  ? "border-[#6b1f32] bg-[#6b1f32] text-white"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {selected
+                                ? "✓"
+                                : ""}
+                            </div>
+
+                            <div>
+
+                              <div className="font-serif text-lg text-[#6b1f32]">
+                                {event.name}
+                              </div>
+
+                              <div className="text-xs text-gray-500">
+                                {event.date} •{" "}
+                                {event.time}
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                        </button>
                       );
-
-                    return (
-                      <button
-                        key={event.id}
-                        onClick={() =>
-                          toggleEditFunction(event.id)
-                        }
-                        className={`rounded-2xl border p-4 text-left ${
-                          selected
-                            ? "border-[#6b1f32] bg-[#fff5f5]"
-                            : "border-gray-200 bg-white"
-                        }`}
-                      >
-
-                        <div className="flex items-center gap-3">
-
-                          <div
-                            className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs ${
-                              selected
-                                ? "border-[#6b1f32] bg-[#6b1f32] text-white"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            {selected ? "✓" : ""}
-                          </div>
-
-                          <div>
-
-                            <div className="font-serif text-lg text-[#6b1f32]">
-                              {event.name}
-                            </div>
-
-                            <div className="text-xs text-gray-500">
-                              {event.date} • {event.time}
-                            </div>
-
-                          </div>
-
-                        </div>
-
-                      </button>
-                    );
-                  })}
+                    }
+                  )}
 
                 </div>
               </div>
             )}
 
-            {editInvitationType === "full" && (
+            {editInvitationType ===
+              "full" && (
               <div className="mt-6 rounded-2xl bg-[#f8f1e7] p-4 text-sm text-[#6b1f32]">
-                ✓ All {weddingFunctions.length} wedding
-                functions will be included.
+                ✓ All{" "}
+                {weddingFunctions.length}{" "}
+                wedding functions will be
+                included.
               </div>
             )}
 
@@ -741,7 +1046,7 @@ export default function AdminPage() {
 
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
 
             <div>
               <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
@@ -751,11 +1056,17 @@ export default function AdminPage() {
               <input
                 value={guestName}
                 onChange={(e) =>
-                  setGuestName(e.target.value)
+                  setGuestName(
+                    e.target.value
+                  )
                 }
-                placeholder="Example: Patel Family"
+                placeholder="Example: Respected Patel Family"
                 className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
               />
+
+              <p className="mt-1 text-xs text-gray-500">
+                Type exactly how you want the WhatsApp greeting to appear.
+              </p>
             </div>
 
             <div>
@@ -768,13 +1079,37 @@ export default function AdminPage() {
                 min="1"
                 value={guestCount}
                 onChange={(e) =>
-                  setGuestCount(e.target.value)
+                  setGuestCount(
+                    e.target.value
+                  )
                 }
                 className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
               />
 
               <p className="mt-1 text-xs text-gray-500">
                 This number is fixed for the guest.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
+                WhatsApp Number
+              </label>
+
+              <input
+                value={whatsappNumber}
+                onChange={(e) =>
+                  setWhatsappNumber(
+                    e.target.value
+                  )
+                }
+                placeholder="+919876543210"
+                inputMode="tel"
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
+              />
+
+              <p className="mt-1 text-xs text-gray-500">
+                Include country code: +91, +1, +44, etc.
               </p>
             </div>
 
@@ -791,7 +1126,9 @@ export default function AdminPage() {
 
               <button
                 onClick={() =>
-                  handleInvitationTypeChange("full")
+                  handleInvitationTypeChange(
+                    "full"
+                  )
                 }
                 className={`rounded-2xl border p-4 text-left ${
                   invitationType === "full"
@@ -810,7 +1147,9 @@ export default function AdminPage() {
 
               <button
                 onClick={() =>
-                  handleInvitationTypeChange("custom")
+                  handleInvitationTypeChange(
+                    "custom"
+                  )
                 }
                 className={`rounded-2xl border p-4 text-left ${
                   invitationType === "custom"
@@ -829,7 +1168,9 @@ export default function AdminPage() {
 
               <button
                 onClick={() =>
-                  handleInvitationTypeChange("single")
+                  handleInvitationTypeChange(
+                    "single"
+                  )
                 }
                 className={`rounded-2xl border p-4 text-left ${
                   invitationType === "single"
@@ -842,7 +1183,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="mt-1 text-xs opacity-80">
-                  Select exactly one
+                  Select exactly one function
                 </div>
               </button>
 
@@ -850,7 +1191,8 @@ export default function AdminPage() {
           </div>
 
           {/* FUNCTIONS */}
-          {invitationType !== "full" && (
+          {invitationType !==
+            "full" && (
             <div className="mt-7">
 
               <label className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
@@ -859,62 +1201,74 @@ export default function AdminPage() {
 
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
 
-                {weddingFunctions.map((event) => {
+                {weddingFunctions.map(
+                  (event) => {
 
-                  const selected =
-                    selectedFunctions.includes(event.id);
+                    const selected =
+                      selectedFunctions.includes(
+                        event.id
+                      );
 
-                  return (
-                    <button
-                      key={event.id}
-                      onClick={() =>
-                        toggleFunction(event.id)
-                      }
-                      className={`rounded-2xl border p-4 text-left ${
-                        selected
-                          ? "border-[#6b1f32] bg-[#fff5f5]"
-                          : "border-gray-200 bg-white"
-                      }`}
-                    >
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() =>
+                          toggleFunction(
+                            event.id
+                          )
+                        }
+                        className={`rounded-2xl border p-4 text-left ${
+                          selected
+                            ? "border-[#6b1f32] bg-[#fff5f5]"
+                            : "border-gray-200 bg-white"
+                        }`}
+                      >
 
-                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3">
 
-                        <div
-                          className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs ${
-                            selected
-                              ? "border-[#6b1f32] bg-[#6b1f32] text-white"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {selected ? "✓" : ""}
-                        </div>
-
-                        <div>
-
-                          <div className="font-serif text-lg text-[#6b1f32]">
-                            {event.name}
+                          <div
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs ${
+                              selected
+                                ? "border-[#6b1f32] bg-[#6b1f32] text-white"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {selected
+                              ? "✓"
+                              : ""}
                           </div>
 
-                          <div className="text-xs text-gray-500">
-                            {event.date} • {event.time}
+                          <div>
+
+                            <div className="font-serif text-lg text-[#6b1f32]">
+                              {event.name}
+                            </div>
+
+                            <div className="text-xs text-gray-500">
+                              {event.date} •{" "}
+                              {event.time}
+                            </div>
+
                           </div>
 
                         </div>
 
-                      </div>
-
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  }
+                )}
 
               </div>
             </div>
           )}
 
-          {invitationType === "full" && (
+          {invitationType ===
+            "full" && (
             <div className="mt-6 rounded-2xl bg-[#f8f1e7] p-4 text-sm text-[#6b1f32]">
-              ✓ All {weddingFunctions.length} wedding
-              functions will be included.
+              ✓ All{" "}
+              {weddingFunctions.length}{" "}
+              wedding functions will be
+              included.
             </div>
           )}
 
@@ -949,7 +1303,9 @@ export default function AdminPage() {
 
                 <button
                   onClick={() =>
-                    copyLink(createdLink)
+                    copyLink(
+                      createdLink
+                    )
                   }
                   className="rounded-full border border-[#c9a45c] px-4 py-3 text-sm text-[#8a6636]"
                 >
@@ -960,7 +1316,8 @@ export default function AdminPage() {
                   onClick={() =>
                     shareWhatsApp(
                       createdLink,
-                      guestName
+                      createdGuestName,
+                      createdWhatsAppNumber
                     )
                   }
                   className="rounded-full bg-[#25D366] px-4 py-3 text-sm font-medium text-white"
@@ -1000,38 +1357,72 @@ export default function AdminPage() {
 
             </div>
 
-            <button
-              onClick={loadAdminData}
-              className="rounded-full border border-[#c9a45c] px-5 py-2 text-sm text-[#8a6636]"
-            >
-              Refresh
-            </button>
+            <div className="flex flex-wrap gap-2">
+
+              <button
+                onClick={
+                  exportGuestsToExcel
+                }
+                disabled={
+                  invitations.length ===
+                  0
+                }
+                className="rounded-full bg-[#6b1f32] px-5 py-2 text-sm text-white disabled:opacity-40"
+              >
+                📊 Export Guests Excel
+              </button>
+
+              <button
+                onClick={
+                  loadAdminData
+                }
+                className="rounded-full border border-[#c9a45c] px-5 py-2 text-sm text-[#8a6636]"
+              >
+                Refresh
+              </button>
+
+            </div>
 
           </div>
 
           <div className="mt-6 grid gap-3 md:grid-cols-[1fr_auto]">
 
             <input
-              value={invitationSearch}
-              onChange={(e) =>
-                setInvitationSearch(e.target.value)
+              value={
+                invitationSearch
               }
-              placeholder="Search guest or family..."
+              onChange={(e) =>
+                setInvitationSearch(
+                  e.target.value
+                )
+              }
+              placeholder="Search guest, family or WhatsApp number..."
               className="w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
             />
 
             <select
-              value={invitationFilter}
+              value={
+                invitationFilter
+              }
               onChange={(e) =>
-                setInvitationFilter(e.target.value)
+                setInvitationFilter(
+                  e.target.value
+                )
               }
               className="rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
             >
-              <option value="all">All Guests</option>
-              <option value="attending">Attending</option>
+              <option value="all">
+                All Guests
+              </option>
+
+              <option value="attending">
+                Attending
+              </option>
+
               <option value="not-attending">
                 Not Attending
               </option>
+
               <option value="no-response">
                 No RSVP Yet
               </option>
@@ -1043,7 +1434,8 @@ export default function AdminPage() {
             <p className="mt-6 text-sm text-gray-500">
               Loading guests...
             </p>
-          ) : filteredInvitations.length === 0 ? (
+          ) : filteredInvitations.length ===
+            0 ? (
             <div className="mt-6 rounded-2xl bg-[#f8f1e7] p-6 text-center">
               <p className="font-serif text-xl text-[#6b1f32]">
                 No matching guests
@@ -1052,141 +1444,171 @@ export default function AdminPage() {
           ) : (
             <div className="mt-6 space-y-4">
 
-              {filteredInvitations.map((invitation) => {
+              {filteredInvitations.map(
+                (invitation) => {
 
-                const invitationRsvp =
-                  getLatestRsvp(
-                    invitation.invitation_id
-                  );
+                  const invitationRsvp =
+                    getLatestRsvp(
+                      invitation.invitation_id
+                    );
 
-                const invitationLink =
-                  `${window.location.origin}/invite/${invitation.invitation_id}`;
+                  const invitationLink =
+                    `${window.location.origin}/invite/${invitation.invitation_id}`;
 
-                return (
-                  <div
-                    key={invitation.invitation_id}
-                    className="rounded-2xl border border-gray-200 bg-[#fffdfa] p-5"
-                  >
+                  return (
+                    <div
+                      key={
+                        invitation.invitation_id
+                      }
+                      className="rounded-2xl border border-gray-200 bg-[#fffdfa] p-5"
+                    >
 
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
 
-                      <div className="min-w-0">
+                        <div className="min-w-0">
 
-                        <h3 className="font-serif text-2xl text-[#6b1f32]">
-                          {invitation.guest_name}
-                        </h3>
+                          <h3 className="font-serif text-2xl text-[#6b1f32]">
+                            {
+                              invitation.guest_name
+                            }
+                          </h3>
 
-                        <div className="mt-2 flex flex-wrap gap-2">
+                          <div className="mt-2 flex flex-wrap gap-2">
 
-                          <span className="rounded-full bg-[#f8f1e7] px-3 py-1 text-xs text-[#8a6636]">
-                            👥 {invitation.guest_count}{" "}
-                            {Number(invitation.guest_count) === 1
-                              ? "Guest"
-                              : "Guests"}
-                          </span>
-
-                          <span className="rounded-full bg-[#f8f1e7] px-3 py-1 text-xs capitalize text-[#8a6636]">
-                            💌 {invitation.invitation_type}
-                          </span>
-
-                          {invitationRsvp ? (
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs ${
-                                invitationRsvp.attending
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {invitationRsvp.attending
-                                ? "✓ Attending"
-                                : "✕ Not Attending"}
+                            <span className="rounded-full bg-[#f8f1e7] px-3 py-1 text-xs text-[#8a6636]">
+                              👥{" "}
+                              {
+                                invitation.guest_count
+                              }{" "}
+                              {Number(
+                                invitation.guest_count
+                              ) === 1
+                                ? "Guest"
+                                : "Guests"}
                             </span>
-                          ) : (
-                            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
-                              No RSVP
+
+                            <span className="rounded-full bg-[#f8f1e7] px-3 py-1 text-xs capitalize text-[#8a6636]">
+                              💌{" "}
+                              {
+                                invitation.invitation_type
+                              }
                             </span>
+
+                            {invitation.whatsapp_number && (
+                              <span className="rounded-full bg-green-50 px-3 py-1 text-xs text-green-700">
+                                📱{" "}
+                                {displayWhatsAppNumber(
+                                  invitation.whatsapp_number
+                                )}
+                              </span>
+                            )}
+
+                            {invitationRsvp ? (
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs ${
+                                  invitationRsvp.attending
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {invitationRsvp.attending
+                                  ? "✓ Attending"
+                                  : "✕ Not Attending"}
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
+                                No RSVP
+                              </span>
+                            )}
+
+                          </div>
+
+                          <div className="mt-4">
+
+                            <p className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
+                              Functions
+                            </p>
+
+                            <p className="mt-1 text-sm leading-6 text-gray-600">
+                              {getFunctionNames(
+                                invitation.selected_functions
+                              )}
+                            </p>
+
+                          </div>
+
+                          {invitationRsvp?.message && (
+                            <div className="mt-4 rounded-xl bg-[#f8f1e7] p-4">
+
+                              <p className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
+                                RSVP Message
+                              </p>
+
+                              <p className="mt-2 text-sm leading-6 text-gray-600">
+                                {
+                                  invitationRsvp.message
+                                }
+                              </p>
+
+                            </div>
                           )}
 
                         </div>
 
-                        <div className="mt-4">
+                        <div className="flex shrink-0 flex-wrap gap-2">
 
-                          <p className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
-                            Functions
-                          </p>
+                          <button
+                            onClick={() =>
+                              startEditing(
+                                invitation
+                              )
+                            }
+                            className="rounded-full border border-[#6b1f32] px-4 py-2 text-xs font-medium text-[#6b1f32]"
+                          >
+                            ✏ Edit
+                          </button>
 
-                          <p className="mt-1 text-sm leading-6 text-gray-600">
-                            {getFunctionNames(
-                              invitation.selected_functions
-                            )}
-                          </p>
+                          <button
+                            onClick={() =>
+                              copyLink(
+                                invitationLink
+                              )
+                            }
+                            className="rounded-full border border-[#c9a45c] px-4 py-2 text-xs text-[#8a6636]"
+                          >
+                            🔗 Copy Link
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              shareWhatsApp(
+                                invitationLink,
+                                invitation.guest_name,
+                                invitation.whatsapp_number
+                              )
+                            }
+                            className="rounded-full bg-[#25D366] px-4 py-2 text-xs text-white"
+                          >
+                            WhatsApp
+                          </button>
+
+                          <a
+                            href={`/invite/${invitation.invitation_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-full bg-[#6b1f32] px-4 py-2 text-xs text-white"
+                          >
+                            👁 Open
+                          </a>
 
                         </div>
-
-                        {invitationRsvp?.message && (
-                          <div className="mt-4 rounded-xl bg-[#f8f1e7] p-4">
-
-                            <p className="text-xs uppercase tracking-[0.15em] text-[#9b7440]">
-                              RSVP Message
-                            </p>
-
-                            <p className="mt-2 text-sm leading-6 text-gray-600">
-                              {invitationRsvp.message}
-                            </p>
-
-                          </div>
-                        )}
-
-                      </div>
-
-                      <div className="flex shrink-0 flex-wrap gap-2">
-
-                        <button
-                          onClick={() =>
-                            startEditing(invitation)
-                          }
-                          className="rounded-full border border-[#6b1f32] px-4 py-2 text-xs font-medium text-[#6b1f32]"
-                        >
-                          ✏ Edit
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            copyLink(invitationLink)
-                          }
-                          className="rounded-full border border-[#c9a45c] px-4 py-2 text-xs text-[#8a6636]"
-                        >
-                          🔗 Copy Link
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            shareWhatsApp(
-                              invitationLink,
-                              invitation.guest_name
-                            )
-                          }
-                          className="rounded-full bg-[#25D366] px-4 py-2 text-xs text-white"
-                        >
-                          WhatsApp
-                        </button>
-
-                        <a
-                          href={`/invite/${invitation.invitation_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-full bg-[#6b1f32] px-4 py-2 text-xs text-white"
-                        >
-                          👁 Open
-                        </a>
 
                       </div>
 
                     </div>
-
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
 
             </div>
           )}
@@ -1210,12 +1632,30 @@ export default function AdminPage() {
 
             </div>
 
-            <button
-              onClick={loadAdminData}
-              className="rounded-full border border-[#c9a45c] px-5 py-2 text-sm text-[#8a6636]"
-            >
-              Refresh RSVPs
-            </button>
+            <div className="flex flex-wrap gap-2">
+
+              <button
+                onClick={
+                  exportRsvpsToExcel
+                }
+                disabled={
+                  rsvps.length === 0
+                }
+                className="rounded-full bg-[#6b1f32] px-5 py-2 text-sm text-white disabled:opacity-40"
+              >
+                📊 Export RSVPs Excel
+              </button>
+
+              <button
+                onClick={
+                  loadAdminData
+                }
+                className="rounded-full border border-[#c9a45c] px-5 py-2 text-sm text-[#8a6636]"
+              >
+                Refresh RSVPs
+              </button>
+
+            </div>
 
           </div>
 
@@ -1258,7 +1698,9 @@ export default function AdminPage() {
             <input
               value={rsvpSearch}
               onChange={(e) =>
-                setRsvpSearch(e.target.value)
+                setRsvpSearch(
+                  e.target.value
+                )
               }
               placeholder="Search RSVP by guest or family..."
               className="w-full rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
@@ -1267,12 +1709,20 @@ export default function AdminPage() {
             <select
               value={rsvpFilter}
               onChange={(e) =>
-                setRsvpFilter(e.target.value)
+                setRsvpFilter(
+                  e.target.value
+                )
               }
               className="rounded-xl border border-gray-200 bg-[#fffdfa] px-4 py-3 text-sm outline-none focus:border-[#c9a45c]"
             >
-              <option value="all">All RSVPs</option>
-              <option value="attending">Attending</option>
+              <option value="all">
+                All RSVPs
+              </option>
+
+              <option value="attending">
+                Attending
+              </option>
+
               <option value="not-attending">
                 Not Attending
               </option>
@@ -1284,7 +1734,8 @@ export default function AdminPage() {
             <p className="mt-6 text-sm text-gray-500">
               Loading RSVPs...
             </p>
-          ) : filteredRsvps.length === 0 ? (
+          ) : filteredRsvps.length ===
+            0 ? (
             <div className="mt-6 rounded-2xl bg-[#f8f1e7] p-6 text-center">
               <p className="font-serif text-xl text-[#6b1f32]">
                 No matching RSVPs
@@ -1293,67 +1744,73 @@ export default function AdminPage() {
           ) : (
             <div className="mt-6 space-y-4">
 
-              {filteredRsvps.map((rsvp) => (
+              {filteredRsvps.map(
+                (rsvp) => (
 
-                <div
-                  key={rsvp.id}
-                  className="rounded-2xl border border-gray-200 bg-[#fffdfa] p-5"
-                >
+                  <div
+                    key={rsvp.id}
+                    className="rounded-2xl border border-gray-200 bg-[#fffdfa] p-5"
+                  >
 
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-                    <div>
+                      <div>
 
-                      <h3 className="font-serif text-xl text-[#6b1f32]">
-                        {rsvp.guest_name}
-                      </h3>
+                        <h3 className="font-serif text-xl text-[#6b1f32]">
+                          {
+                            rsvp.guest_name
+                          }
+                        </h3>
 
-                      <p className="mt-1 text-xs text-gray-500">
-                        Family / Invitation:{" "}
-                        {getInvitationName(
-                          rsvp.invitation_id
-                        )}
-                      </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Family / Invitation:{" "}
+                          {getInvitationName(
+                            rsvp.invitation_id
+                          )}
+                        </p>
+
+                      </div>
+
+                      <div
+                        className={`rounded-full px-4 py-2 text-xs font-medium ${
+                          rsvp.attending
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {rsvp.attending
+                          ? "✓ Attending"
+                          : "✕ Not Attending"}
+                      </div>
 
                     </div>
 
-                    <div
-                      className={`rounded-full px-4 py-2 text-xs font-medium ${
-                        rsvp.attending
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {rsvp.attending
-                        ? "✓ Attending"
-                        : "✕ Not Attending"}
-                    </div>
+                    {rsvp.message && (
+                      <div className="mt-4 rounded-xl bg-[#f8f1e7] p-4">
+
+                        <p className="text-xs uppercase tracking-wider text-[#9b7440]">
+                          Message
+                        </p>
+
+                        <p className="mt-2 text-sm leading-6 text-gray-600">
+                          {
+                            rsvp.message
+                          }
+                        </p>
+
+                      </div>
+                    )}
+
+                    <p className="mt-3 text-xs text-gray-400">
+                      {new Date(
+                        rsvp.created_at
+                      ).toLocaleString()}
+                    </p>
 
                   </div>
 
-                  {rsvp.message && (
-                    <div className="mt-4 rounded-xl bg-[#f8f1e7] p-4">
-
-                      <p className="text-xs uppercase tracking-wider text-[#9b7440]">
-                        Message
-                      </p>
-
-                      <p className="mt-2 text-sm leading-6 text-gray-600">
-                        {rsvp.message}
-                      </p>
-
-                    </div>
-                  )}
-
-                  <p className="mt-3 text-xs text-gray-400">
-                    {new Date(
-                      rsvp.created_at
-                    ).toLocaleString()}
-                  </p>
-
-                </div>
-
-              ))}
+                )
+              )}
 
             </div>
           )}
